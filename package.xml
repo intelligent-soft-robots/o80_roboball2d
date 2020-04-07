@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package>
+  <name>o80_roboball2d</name>
+  <version>1.0.0</version>
+  <description>robot interface of (python) roboball2d</description>
+  <author email="vincent.berenz@tuebingen.mpg.de">Vincent Berenz</author>
+  <maintainer email="vincent.berenz@tuebingen.mpg.de">Vincent Berenz</maintainer>
+  <license>TODO</license>
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>shared_memory</build_depend>
+  <build_depend>real_time_tools</build_depend>
+  <build_depend>o80</build_depend>
+  <build_depend>robot_interfaces</build_depend>
+  <build_depend>roboball2d_interface</build_depend>
+  <build_depend>pybind11_catkin</build_depend>
+  
+  <run_depend>shared_memory</run_depend>
+  <run_depend>real_time_tools</run_depend>
+  <run_depend>o80</run_depend>
+  <run_depend>robot_interfaces</run_depend>
+  <run_depend>roboball2d_interface</run_depend>
+  <run_depend>pybind11_catkin</run_depend>
+
+  <export>
+  </export>
+</package>
+
