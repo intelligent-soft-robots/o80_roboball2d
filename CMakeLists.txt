@@ -39,6 +39,16 @@ target_link_libraries(o80_roboball2d ${catkin_LIBRARIES})
 # Python bindings #
 ###################
 
+pybind11_add_module(o80_roboball2d_py
+  srcpy/wrappers.cpp)
+target_link_libraries(o80_roboball2d_py
+  PUBLIC o80_roboball2d ${catkin_LIBRARIES})
+set_target_properties(o80_roboball2d_py PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_PYTHON_DESTINATION}
+  OUTPUT_NAME o80_roboball2d)
+install(TARGETS o80_roboball2d_py
+  DESTINATION ${CATKIN_GLOBAL_PYTHON_DESTINATION})
+
 macro(add_python_module source_file)
   pybind11_add_module(o80_roboball2d_${source_file}
     srcpy/wrappers_${source_file}.cpp)
