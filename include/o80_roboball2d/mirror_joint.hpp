@@ -5,7 +5,7 @@
 
 #include "o80/interpolation.hpp"
 
-#include "roboball2d_interface/item.hpp"
+#include "o80_roboball2d/item.hpp"
 
 namespace o80_roboball2d
 {
