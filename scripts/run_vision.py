@@ -7,13 +7,14 @@ import roboball2d.robot
 import roboball2d.ball
 import roboball2d.ball_gun
 import roboball2d.rendering
+import o80
 import o80_roboball2d
 import world_state_conversions 
 
 # configuration
-interface_id_vision = "real-vision"
-interface_id_robot = "real-robot"
-vision_frequency = 200
+segment_id_real_ball = "real-ball"
+segment_id_vision_ball = "vision-ball"
+vision_frequency = 100
 class Window:
     def __init__(self):
         self.width = 400
@@ -23,7 +24,10 @@ class Window:
 # and pseudo ball-gun
 def run_vision(render=True):
 
-    # ensures "reality" loops at the desired frequency
+    # cleanup of previous runs
+    o80.clear_shared_memory(segment_id_vision_ball)
+    
+    # ensures loops at the desired frequency
     frequency_manager = real_time_tools.FrequencyManager(vision_frequency)
 
     # creating the roboball2d instances
@@ -39,28 +43,25 @@ def run_vision(render=True):
                                                        None,
                                                        ball_config)
 
-    # reader to get info from "reality"
-    reader = o80_roboball2d.RealRobotReader(interface_id_robot)
+    # o80 communication
+    real_ball_frontend = o80_roboball2d.BallFrontEnd(segment_id_real_ball)
+    vision_ball_backend = o80_roboball2d.BallBackEnd(segment_id_vision_ball)
 
-    # writer to send info to vision driver
-    writer = o80_roboball2d.RealRobotWriter(interface_id_vision)
-
-    running=True
+    # for rendering
+    world_state = roboball2d.physics.WorldState([],ball_config)
     
+    running=True
     while running:
 
         try :
-            # getting world_state (incl ball info) from "reality"
-            # (see run_reality.py in same folder)
-            sm_world_state = reader.read_world_state()
-            # writting the world_state (incl ball) in the shared memory
-            # for the vision driver to read
-            writer.write_world_state(sm_world_state)
-            # rendering
-            world_state = roboball2d.physics.WorldState([],[ball_config]) 
-            world_state_conversions.convert(sm_world_state,
-                                            world_state)
-            renderer.render(world_state,[],time_step=1.0/30.0,wait=False)
+
+            observation = real_ball_frontend.pulse()
+            ball = observation.get_extended_state()
+            vision_ball_backend.pulse(ball)
+            if render:
+                world_state_conversions.item_to_item(ball,
+                                                     world_state.ball)
+                renderer.render(world_state,[],time_step=1.0/30.0,wait=False)
             frequency_manager.wait()
         
         except KeyboardInterrupt:

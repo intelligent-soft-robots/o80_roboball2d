@@ -5,7 +5,7 @@
 # and vice versa                                       #
 ########################################################
 
-def _item_to_item(item1,item2):
+def item_to_item(item1,item2):
     if item1 is None:
         return
     for attr in ("position","angle",
@@ -17,7 +17,7 @@ def _item_to_item(item1,item2):
             setattr(item2,attr,v)
 
 def _array_to_array(a1,a2):
-    list(map(_item_to_item,a1,a2))
+    list(map(item_to_item,a1,a2))
 
 def _robot_to_robot(r1,r2):
     if r1 is None:
@@ -27,11 +27,11 @@ def _robot_to_robot(r1,r2):
     for attr in ("joints","rods"):
         _array_to_array(getattr(r1,attr),
                         getattr(r2,attr))
-    _item_to_item(r1.racket,r2.racket)
+    item_to_item(r1.racket,r2.racket)
     
 def _convert(w1,w2):
     _robot_to_robot(w1.robot,w2.robot)
-    _item_to_item(w1.ball,w2.ball)
+    item_to_item(w1.ball,w2.ball)
     if(hasattr(w1,"ball_hits_floor_position")):
         if w1.ball_hits_floor:
             w2.ball_hits_floor = w1.ball_hits_floor_position

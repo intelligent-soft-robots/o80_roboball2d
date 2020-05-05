@@ -30,24 +30,9 @@ include_directories(include
 ################
 
 add_library( o80_roboball2d
-  src/torques_action.cpp
-  src/ball_gun_action.cpp
-  src/mirror_action.cpp
-  src/ball_gun_driver.cpp
   src/joint.cpp
   src/mirror_joint)
 target_link_libraries(o80_roboball2d ${catkin_LIBRARIES})
-
-
-#########
-# Demos #
-#########
-
-add_executable( roboball2d_interface_demo
-  demo/roboball2d_interface_demo.cpp )
-target_link_libraries(roboball2d_interface_demo
-  o80_roboball2d
-  ${catkin_LIBRARIES})
 
 
 ###################

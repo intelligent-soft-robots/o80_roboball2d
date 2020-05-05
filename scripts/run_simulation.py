@@ -25,6 +25,11 @@ class Window:
 
 def run_simulation(render=True):
 
+    # cleanup of previous runs
+    o80.clear_shared_memory(segment_id_robot)
+    o80.clear_shared_memory(segment_id_ball_gun)
+    o80.clear_shared_memory(segment_id_world_state)
+    
     # o80 backends
     ball_gun_backend = o80_roboball2d.BallGunBackEnd(segment_id_ball_gun)
     mirroring_robot_backend = o80_roboball2d.MirroringBackEnd(segment_id_robot)
@@ -62,11 +67,11 @@ def run_simulation(render=True):
         # waiting to get order from frontend to perform
         # an iteration
         running = burster.pulse()
-
+        
         # using ball gun backend to get ball gun
         # shooting command
         shooting = ball_gun_backend.pulse()
-        if shooting.get():
+        if shooting.get(0).get():
             # shooting balls
             world.reset(None,ball_guns)
 
@@ -95,6 +100,12 @@ def run_simulation(render=True):
                                         o80_world_state)
         world_state_backend.pulse(o80_world_state)        
 
+        # rendering
+        if render:
+            renderer.render(world_state,[],
+                            time_step=1.0/30.0,wait=False)
+
+        
         
 if __name__ == '__main__':
 
