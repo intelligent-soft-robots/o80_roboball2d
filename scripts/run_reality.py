@@ -54,7 +54,11 @@ def run_reality(render=True):
                                                        ball_config)
         
     # o80 communication
-    robot_backend = o80_roboball2d.RealRobotBackEnd(segment_id_robot)
+    # note : robot backend will write new observations only when
+    # new commands are executed
+    write_observation_on_new_commands = True
+    robot_backend = o80_roboball2d.RealRobotBackEnd(segment_id_robot,
+                                                    write_observation_on_new_commands)
     ball_gun_backend = o80_roboball2d.BallGunBackEnd(segment_id_ball_gun)
     real_ball_backend = o80_roboball2d.BallBackEnd(segment_id_real_ball)
     

@@ -6,6 +6,8 @@ from policy import Policy
 
 def run():
 
+    frequency_manager = real_time_tools.FrequencyManager(500)
+
     orchestrator = Orchestrator()
     context_manager = ContextManager()
     policy = Policy()
@@ -16,18 +18,20 @@ def run():
     while running:
 
         orchestrator.apply(reset=True,shoot=True)
+        context_manager.reset()
         time_start = time.time()
 
         while time.time()-time_start < 3 :
 
             try:
-                angles,angular_velocities,context_world_state = context_manager.merge()
-                torques = policy.get_torques(angles,
-                                             angular_velocities)
+                robot_state,context_world_state = context_manager.merge()
+                torques = policy.get_torques(robot_state.angles,
+                                             robot_state.angular_velocities)
                 orchestrator.apply(torques=torques)
+                frequency_manager.wait()
             except KeyboardInterrupt:
                 running = False
-            
+
 
 if __name__ == "__main__":
 

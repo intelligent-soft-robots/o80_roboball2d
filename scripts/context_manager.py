@@ -10,29 +10,29 @@ class ContextManager:
 
     def __init__(self,nb_simulated_balls=5,render=True):
 
-        # o80 frontend instances to get states from pseudo real robot,
-        # simulation and pseudo real vision
+        self._init_o80()
+        self._init_roboball2d(nb_simulated_balls)
+        self._init_rendering(render)
+    
+    def _init_o80(self):
         self._real_robot = o80_roboball2d.RealRobotFrontEnd("real-robot")
         self._simulation = o80_roboball2d.FiveBallsWorldStateFrontEnd("sim-world-state")
         self._vision = o80_roboball2d.BallFrontEnd("vision-ball")
 
-        # robot config 
+    def _init_roboball2d(self,nb_simulated_balls):
         self._robot_config = roboball2d.robot.DefaultRobotConfig()
-        
-        # configs of simulated ball + real ball
-        # (first ball will mirror the real ball, and will be green)
-        ball_configs = [roboball2d.ball.BallConfig()
-                       for _ in range(nb_simulated_balls+1)]
-        ball_configs[0].color = [0,1,0]
-
-        # roboball2d simulation
+        self._ball_configs = [roboball2d.ball.BallConfig()
+                              for _ in range(nb_simulated_balls+1)]
+        self._ball_configs[0].color = [0,1,0]
         visible_area_width = 6.0
         self._world = roboball2d.physics.B2World(self._robot_config,
-                                                 ball_configs,
+                                                 self._ball_configs,
                                                  visible_area_width)
-        # rendering
+        
+    def _init_rendering(self,render):
         self._render = render
         if(render):
+            visible_area_width = 6.0
             visual_height = 0.05
             class Window:
                 def __init__(self):
@@ -43,17 +43,16 @@ class ContextManager:
             renderer_config.window = Window()
             self._renderer = roboball2d.rendering.PygletRenderer(renderer_config,
                                                                  self._robot_config,
-                                                                 ball_configs)
+                                                                 self._ball_configs)
+            
 
-        
-    def merge(self):
+    def reset(self):
+        self._real_robot.reset_next_index()
+        self._simulation.reset_next_index()
 
-        real_robot_observation = self._real_robot.pulse()
-        real_ball_observation = self._vision.pulse()
-        sim_world_state_observation = self._simulation.wait_for_next()
-
-        # converting o80 joint states into roboball2d robot state,
-        current_robot_joints = real_robot_observation.get_observed_states()
+    def _get_robot_state(self):
+        real_robot_obs = self._real_robot.wait_for_next()
+        current_robot_joints = real_robot_obs.get_observed_states()
         roboball2d_robot_state = roboball2d.robot.DefaultRobotState(self._robot_config)
         angles = [current_robot_joints.get(dof).get_position()
                   for dof in range(3)]
@@ -63,31 +62,49 @@ class ContextManager:
                    for dof in range(3)]
         robot_state = roboball2d.robot.DefaultRobotState(self._robot_config,
                                                          angles,velocities)
-        mirroring_robot_states = {0:robot_state}
+        time_stamp = real_robot_obs.get_time_stamp()
+        return time_stamp,torques,robot_state
 
-        # getting real and virtual ball states from o80
-        mirroring_ball_states = {}
-        real_ball_state = real_ball_observation.get_extended_state()
-        mirroring_ball_states[0]= real_ball_state
-        sim_world_state = sim_world_state_observation.get_extended_state()
-        for index,ball in enumerate(sim_world_state.balls):
-            mirroring_ball_states[index+1]=ball
-        
-        
-        # running one state of roboball2d, mirroring real and simulated balls
-        context_world_state = self._world.step(torques,
-                                               current_time=real_robot_observation.get_time_stamp(),
-                                               mirroring_robot_states=mirroring_robot_states,
-                                               mirroring_ball_states=mirroring_ball_states)
+    def _get_ball_state(self):
+        real_ball_obs = self._vision.pulse()        
+        real_ball_state = real_ball_obs.get_extended_state()
+        return real_ball_state
 
-        # rendering
+    def _get_sim_balls_state(self):
+        sim_world_state_obs = self._simulation.wait_for_next()
+        sim_world_state = sim_world_state_obs.get_extended_state()
+        return sim_world_state.balls
+
+    def _rendering(self,world_state):
         if(self._render):
-            self._renderer.render(context_world_state,
+            self._renderer.render(world_state,
                                   [],
                                   time_step=1.0/30.0,
                                   wait=False)
 
+    def merge(self):
+
+        # getting updated real robot state
+        time_stamp,torques,real_robot_state = self._get_robot_state()
+        mirroring_robot_states = {0:real_robot_state}
+
+        # getting update real ball state
+        real_ball_state = self._get_ball_state()
+        mirroring_ball_states = {0:real_ball_state}
+
+        # getting virtual balls 
+        virtual_balls_state = self._get_sim_balls_state()
+        for index,ball in enumerate(virtual_balls_state):
+            mirroring_ball_states[index+1]=ball
         
-        # context_world_state encapsulates everything, including contacts
-        return angles, velocities, context_world_state
+        # running one simulation step 
+        context_world_state = self._world.step(torques,
+                                               current_time=time_stamp,
+                                               mirroring_robot_states=mirroring_robot_states,
+                                               mirroring_ball_states=mirroring_ball_states)
+
+        # rendering
+        self._rendering(context_world_state)
+        
+        return real_robot_state, context_world_state
         

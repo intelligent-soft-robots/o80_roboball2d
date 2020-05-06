@@ -64,10 +64,9 @@ def run_simulation(render=True):
     
     while running:
 
-        # waiting to get order from frontend to perform
+        # waiting to get order from frontend (env) to perform
         # an iteration
         running = burster.pulse()
-        
         # using ball gun backend to get ball gun
         # shooting command
         shooting = ball_gun_backend.pulse()

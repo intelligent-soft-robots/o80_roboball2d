@@ -35,16 +35,23 @@ class Orchestrator:
         if reset:
             self._reset_real_robot()
 
+        # Vincent Note : way to sensitive to
+        # the order at which these commands are
+        # called
+            
         if shoot:
-            self._shoot_real_ball()
             self._shoot_sim_balls()
-
+            self._sim_robot.burst(0)
+            self._shoot_real_ball()
+            
         if torques is not None:
-            self._set_real_torques(torques)
             angles,angular_velocities,_ = self._get_real_robot()
             self._set_mirroring(angles,
                                 angular_velocities)
-        
+            self._sim_robot.burst(0)
+            self._set_real_torques(torques)
+
+            
     # bringing robot to save place,
     # and deleting the o80 frontends (important to be able to restart them)
     def _clean_exit(self):
@@ -142,7 +149,7 @@ class Orchestrator:
             mirror_joint.set(angles[dof],
                              angular_velocities[dof])
             self._sim_robot.add_command(dof,mirror_joint,o80.Mode.OVERWRITE)
-        self._sim_robot.burst(1)
+
 
 
         
