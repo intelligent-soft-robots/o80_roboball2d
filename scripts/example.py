@@ -4,12 +4,15 @@ from hardware_control import HardwareControl
 from policy import Policy
 
 def run():
+
+    # we will run 2 simulations
+    nb_simulations = 2
     
     # encapsulates all the calls to
     # o80 frontends, for clarity
     # Note: hw_control also ensure clean exit
     #       of the robot (i.e. going to safe position)
-    hw_control = HardwareControl()
+    hw_control = HardwareControl(nb_simulations)
 
     # initializing the simulation by having it mirroring
     # the real robot
@@ -49,7 +52,7 @@ def run():
         # getting the iteration number of the simulation at the start of the
         # episode. Will be used to retrieve at the end of the episode
         # its full history of observations 
-        sim_iteration = hw_control.get_sim_iteration()
+        #sim_iteration = hw_control.get_sim_iteration()
         
         time_start = time.time()
 
@@ -67,7 +70,7 @@ def run():
             hw_control.set_real_torques(torques)
 
             # sending mirroring commands to simulated robot
-            simulated_world_state = hw_control.set_mirroring(angles,angular_velocities)
+            hw_control.set_mirroring(angles,angular_velocities)
 
             # imposing frequency
             frequency_manager.wait()

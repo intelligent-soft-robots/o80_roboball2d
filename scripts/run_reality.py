@@ -20,7 +20,8 @@ class Window:
     def __init__(self):
         self.width = 400
         self.height = 200
-
+        
+        
 # run the pseudo robot (i.e. virtual robot that runs
 # iterations at provided frequency, and thus may get unstable)
 # and pseudo ball-gun
@@ -59,8 +60,6 @@ def run_reality(render=True):
     
     # running the simulation
     time_start = time.time()
-    previous_ball_gun_id = -1
-    previous_action_id = -1
     torques = [0,0,0]
     running = True
 
@@ -83,7 +82,6 @@ def run_reality(render=True):
                 joint.set_torque(0)
             states.append(joint)
         return states
-    
     
     while running :
 
@@ -119,6 +117,7 @@ def run_reality(render=True):
             # rendering robot
             if render:
                 world_state.ball = None # robot only, no ball
+                world_state.balls = []
                 renderer.render(world_state,[],time_step=1.0/30.0,wait=False)
 
             frequency_manager.wait()

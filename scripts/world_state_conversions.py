@@ -32,6 +32,7 @@ def _robot_to_robot(r1,r2):
 def _convert(w1,w2):
     _robot_to_robot(w1.robot,w2.robot)
     item_to_item(w1.ball,w2.ball)
+    _array_to_array(w1.balls,w2.balls)
     if(hasattr(w1,"ball_hits_floor_position")):
         if w1.ball_hits_floor:
             w2.ball_hits_floor = w1.ball_hits_floor_position
