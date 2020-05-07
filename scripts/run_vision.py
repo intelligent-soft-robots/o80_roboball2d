@@ -11,17 +11,20 @@ import o80
 import o80_roboball2d
 import world_state_conversions 
 
-# configuration
+# o80 shared memory segments
 segment_id_real_ball = "real-ball"
 segment_id_vision_ball = "vision-ball"
+
+# vision frequency
 vision_frequency = 100
+
+# rendering configuration
 class Window:
     def __init__(self):
         self.width = 400
         self.height = 200
 
-# run the pseudo vision (i.e. fixed frequency vision)
-# and pseudo ball-gun
+
 def run_vision(render=True):
 
     # cleanup of previous runs
@@ -38,6 +41,10 @@ def run_vision(render=True):
     if(render):
         renderer_config = roboball2d.rendering.RenderingConfig(visible_area_width,
                                                                visual_height)
+        renderer_config.background_color = (1,1,1,1)
+        renderer_config.ground_color = (1,1,1)
+        ball_config.color=(0,0,0)
+        ball_config.line_color=(0,0,0)
         renderer_config.window = Window()
         renderer = roboball2d.rendering.PygletRenderer(renderer_config,
                                                        None,
@@ -55,13 +62,21 @@ def run_vision(render=True):
 
         try :
 
+            # getting observation from pseudo real robot
+            # and extracting ball state
             observation = real_ball_frontend.pulse()
             ball = observation.get_extended_state()
+
+            # using o80 backend to send ball state to frontend
             vision_ball_backend.pulse(ball)
+
+            # rendering
             if render:
                 world_state_conversions.item_to_item(ball,
                                                      world_state.ball)
                 renderer.render(world_state,[],time_step=1.0/30.0,wait=False)
+
+            # running at desired frequency
             frequency_manager.wait()
         
         except KeyboardInterrupt:

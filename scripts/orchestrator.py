@@ -18,7 +18,6 @@ class Orchestrator:
         self._real_robot = o80_roboball2d.RealRobotFrontEnd("real-robot")
         self._sim_ball_gun = o80_roboball2d.BallGunFrontEnd("sim-ball-gun")
         self._sim_robot = o80_roboball2d.MirroringFrontEnd("sim-robot")
-        self._vision = o80_roboball2d.BallFrontEnd("vision-ball")
 
         # important: making sure things exit cleanly
         atexit.register(self._clean_exit)
@@ -32,18 +31,21 @@ class Orchestrator:
               reset = None,
               shoot = False):
 
+        # calls a pd controller that has the
+        # pseudo real robot go back to its starting
+        # position
         if reset:
             self._reset_real_robot()
 
-        # Vincent Note : way to sensitive to
-        # the order at which these commands are
-        # called
-            
+        # sending shoot commands to the real and
+        # simulated ball guns
         if shoot:
             self._shoot_sim_balls()
             self._sim_robot.burst(0)
             self._shoot_real_ball()
-            
+
+        # sending torques command to the real robot,
+        # and mirroring commands to the simulated robot
         if torques is not None:
             angles,angular_velocities,_ = self._get_real_robot()
             self._set_mirroring(angles,
@@ -78,8 +80,6 @@ class Orchestrator:
         del self._real_robot
         del self._sim_ball_gun
         del self._sim_robot
-        del self._vision
-
 
     def _shoot_ball(self,frontend):
         shoot = o80.BoolState(True)

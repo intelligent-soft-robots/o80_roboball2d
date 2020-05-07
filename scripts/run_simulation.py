@@ -11,13 +11,17 @@ import o80
 import o80_roboball2d
 import world_state_conversions 
 
-# configuration
+# shared memory segment used by o80
 segment_id_robot = "sim-robot"
 segment_id_ball_gun = "sim-ball-gun"
 segment_id_world_state = "sim-world-state"
+
+# number of simulated balls
+n_balls = 5
+
+# rendering configuration
 visible_area_width = 6.0
 visual_height = 0.05
-n_balls = 5
 class Window:
     def __init__(self):
         self.width = 400
@@ -47,6 +51,11 @@ def run_simulation(render=True):
     if render:
         renderer_config = roboball2d.rendering.RenderingConfig(visible_area_width,
                                                                visual_height)
+        renderer_config.background_color = (1,1,1,1)
+        renderer_config.ground_color = (0,0,0)
+        for ball_config in ball_configs:
+            ball_config.color = (0,0,0)
+            ball_config.line_color = (0,0,0)
         renderer_config.window = Window()
         renderer = roboball2d.rendering.PygletRenderer(renderer_config,
                                                        robot_config,
@@ -59,19 +68,22 @@ def run_simulation(render=True):
     torques = [0,0,0]
     robot_state = None
 
+    # managing the burst commands sent by
+    # the o80 frontend
     burster = o80.Burster(segment_id_robot)
+    
     running = True
     
     while running:
 
-        # waiting to get order from frontend (env) to perform
+        # waiting to get order from frontend to perform
         # an iteration
         running = burster.pulse()
-        # using ball gun backend to get ball gun
-        # shooting command
+        
+        # receiving ball-gun shooting command,
+        # and shooting if requested
         shooting = ball_gun_backend.pulse()
         if shooting.get(0).get():
-            # shooting balls
             world.reset(None,ball_guns)
 
         # using mirroring backend to get
@@ -85,7 +97,6 @@ def run_simulation(render=True):
             robot_config,
             generalized_coordinates=angles,
             generalized_velocities=angular_velocities)
-            
 
         # running the physics (mirring robot + virtual balls dynamics)
         world_state = world.step(None,
@@ -93,7 +104,9 @@ def run_simulation(render=True):
                                  current_time=time.time()-time_start)
 
 
-        # world sharing backend to share current world state
+        # using o80 backend to send world state to o80 frontend
+        # (world_state needs to be converted first to serializable
+        #  o80 world state)
         o80_world_state = o80_roboball2d.FiveBallsWorldState()
         world_state_conversions.convert(world_state,
                                         o80_world_state)
