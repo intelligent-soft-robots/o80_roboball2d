@@ -110,17 +110,7 @@ python3 ./run_reality.py
 
 A window showing a robot should pop up.
 
-## starting pseudo ball vision system
-
-In another terminal:
-
-```bash
-python3 ./run_vision.py
-```
-
-A window should pop up. 
-
-## starting simulated robot and simulated balls
+## starting simulated robot and simulated ball
 
 In another terminal:
 
@@ -128,7 +118,7 @@ In another terminal:
 python3 ./run_simulation.py
 ```
 
-*Nothing* should pop up
+A window showing a robot should pop up.
 
 ## starting the experiment:
 
@@ -138,7 +128,7 @@ In another terminal:
 python3 ./env.py
 ```
 
-*After a few seconds* two windows should pop up, the simulation window and the context manager window. Balls should be flying around and the robot moving
+Ball should be flying around and the real robot / simulated robot moving
 
 ## Exit
 
@@ -146,7 +136,7 @@ python3 ./env.py
 - close the window in which run_simulation.py run
 - cltr-c for exiting run_reality.py and run_vision.py
 
-It is possible to exit env.py and run_simulation.py, but keeping run_reality.py and run_vision.py running (and starting run_simulation.py and env.py again)
+It is possible to exit env.py and run_simulation.py, but keeping run_reality.py running (and starting run_simulation.py and env.py again)
 
 # Troubleshooting
 

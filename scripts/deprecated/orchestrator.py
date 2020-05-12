@@ -1,6 +1,6 @@
 import time,math,random,atexit
 import real_time_tools
-import roboball2d
+from roboball2d.physics import B2World
 from roboball2d.robot.pd_controller import PDController
 import o80
 import o80_roboball2d
@@ -14,56 +14,18 @@ class Orchestrator:
         self._reset_controller = PDController()
         
         # related front ends (clients). Used to send commands to the o80 servers
+        self._ball_gun = o80_roboball2d.BallGunFrontEnd("real-ball-gun")
         self._real_robot = o80_roboball2d.RealRobotFrontEnd("real-robot")
         self._sim_ball_gun = o80_roboball2d.BallGunFrontEnd("sim-ball-gun")
         self._sim_robot = o80_roboball2d.MirroringFrontEnd("sim-robot")
-        self._sim_world_state = o80_roboball2d.OneBallWorldStateFrontEnd("sim-world-state")
 
-        self._robot_config = roboball2d.robot.default_robot_config.DefaultRobotConfig()
+        # important: making sure things exit cleanly
+        atexit.register(self._clean_exit)
         
         # letting time to start properly
         time.sleep(0.1)
 
 
-    def reset(self):
-        # when the pseudo real robot is being reset (between each episode),
-        # it generates observations that should be ignored. Solving this here.
-        self._real_robot.reset_next_index()
-        self._sim_world_state.reset_next_index()
-
-
-    def _get_robot_state(self):
-        # wait for the next observation to be received, and read
-        # the current robot state from it
-        real_robot_obs = self._real_robot.wait_for_next()
-        current_robot_joints = real_robot_obs.get_observed_states()
-        roboball2d_robot_state = roboball2d.robot.DefaultRobotState(self._robot_config)
-        angles = [current_robot_joints.get(dof).get_position()
-                  for dof in range(3)]
-        velocities = [current_robot_joints.get(dof).get_velocity()
-                      for dof in range(3)]
-        robot_state = roboball2d.robot.DefaultRobotState(self._robot_config,
-                                                         angles,velocities)
-        time_stamp = real_robot_obs.get_time_stamp()
-        return (time_stamp,robot_state)
-
-    
-    def _get_context(self):
-        # wait for the next observation to be received,
-        # and read the state of the simulated balls
-        sim_world_state_obs = self._sim_world_state.wait_for_next()
-        sim_world_state = sim_world_state_obs.get_extended_state()
-        time_stamp = sim_world_state_obs.get_time_stamp()
-        return (time_stamp,sim_world_state)
-
-        
-    def observation_manager(self):
-
-        real_robot = self._get_robot_state()
-        simulation = self._get_context()
-
-        return real_robot,simulation
-        
     def apply(self,
               torques = None,
               reset = None,
@@ -80,6 +42,7 @@ class Orchestrator:
         if shoot:
             self._shoot_sim_balls()
             self._sim_robot.burst(0)
+            self._shoot_real_ball()
 
         # sending torques command to the real robot,
         # and mirroring commands to the simulated robot
@@ -91,7 +54,7 @@ class Orchestrator:
             self._set_real_torques(torques)
 
             
-    # bringing robot to safe place,
+    # bringing robot to save place,
     # and deleting the o80 frontends (important to be able to restart them)
     def _clean_exit(self):
 
@@ -110,6 +73,14 @@ class Orchestrator:
         self._real_robot.pulse()
         time.sleep(0.1)
 
+        # cleaning o80 frontends
+        self._sim_robot.final_burst()
+        time.sleep(0.1)
+        del self._ball_gun
+        del self._real_robot
+        del self._sim_ball_gun
+        del self._sim_robot
+
     def _shoot_ball(self,frontend):
         shoot = o80.BoolState(True)
         stop_shoot = o80.BoolState(False)
@@ -117,6 +88,10 @@ class Orchestrator:
         # we shoot only once:
         frontend.add_command(0,stop_shoot,o80.Mode.QUEUE)
         frontend.pulse()
+        
+    # send a shoot command to the o80 ball gun server
+    def _shoot_real_ball(self):
+        self._shoot_ball(self._ball_gun)
         
     # send a shoot command to the o80 simulated ball guns server
     def _shoot_sim_balls(self):

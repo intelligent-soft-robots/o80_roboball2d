@@ -1,6 +1,7 @@
 import time,threading
 import real_time_tools
 from orchestrator import Orchestrator
+from context_manager import ContextManager
 from policy import Policy
 
 
@@ -18,11 +19,13 @@ def run():
 
     frequency_manager = real_time_tools.FrequencyManager(500)
 
-    # uses o80 to send:
-    # torque commands to the pseudo real robot
-    # mirroring commands to the simulated robot
-    # shoot commands to the simulated ball gun
+    # uses o80 to send commands to the pseudo real robot / ball gun
+    # and the simulated robot / ball gun
     orchestrator = Orchestrator()
+
+    # get synchronized info from pseudo real robot / simulated robot
+    # and vision, and runs a simulation step to detect contacts
+    context_manager = ContextManager()
 
     # dummy policy moving robot to random postures
     policy = Policy()
@@ -39,29 +42,23 @@ def run():
 
         # resetting context manager: observation
         # during real robot reset can be ignored
-        orchestrator.reset()
+        context_manager.reset()
         
         time_start = time.time()
 
-        torques = [0.0]*3
-        
         while time.time()-time_start < 3 :
 
             try:
-
-                # sending torques to real robot
-                # and mirroring commands to simulation
-                orchestrator.apply(torques=torques)
                 
                 # getting robot state from direct observation,
-                # and context world state
-                data = orchestrator.observation_manager()
-                (ts_robot,robot_state),(ts_context,context_world_state) = data
-                
+                # and context world state, i.e. world state after
+                # an extra simulation step with merged information 
+                robot_state,context_world_state = context_manager.merge()
+
                 # getting torques from policy and applying them
                 torques = policy.get_torques(robot_state.angles,
                                              robot_state.angular_velocities)
-
+                orchestrator.apply(torques=torques)
 
                 # printing racket contact information
                 _print_contacts(context_world_state)
