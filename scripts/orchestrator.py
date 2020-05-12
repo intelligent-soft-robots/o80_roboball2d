@@ -1,6 +1,6 @@
 import time,math,random,atexit
 import real_time_tools
-from roboball2d.physics import B2World
+import roboball2d
 from roboball2d.robot.pd_controller import PDController
 import o80
 import o80_roboball2d
@@ -18,6 +18,8 @@ class Orchestrator:
         self._sim_ball_gun = o80_roboball2d.BallGunFrontEnd("sim-ball-gun")
         self._sim_robot = o80_roboball2d.MirroringFrontEnd("sim-robot")
         self._sim_world_state = o80_roboball2d.OneBallWorldStateFrontEnd("sim-world-state")
+
+        self._robot_config = roboball2d.robot.default_robot_config.DefaultRobotConfig()
         
         # letting time to start properly
         time.sleep(0.1)
@@ -30,33 +32,35 @@ class Orchestrator:
         self._sim_world_state.reset_next_index()
 
 
-    def observation_manager(self):
-        
-        def _get_robot_state(self):
-            # wait for the next observation to be received, and read
-            # the current robot state from it
-            real_robot_obs = self._real_robot.wait_for_next()
-            current_robot_joints = real_robot_obs.get_observed_states()
-            roboball2d_robot_state = roboball2d.robot.DefaultRobotState(self._robot_config)
-            angles = [current_robot_joints.get(dof).get_position()
+    def _get_robot_state(self):
+        # wait for the next observation to be received, and read
+        # the current robot state from it
+        real_robot_obs = self._real_robot.wait_for_next()
+        current_robot_joints = real_robot_obs.get_observed_states()
+        roboball2d_robot_state = roboball2d.robot.DefaultRobotState(self._robot_config)
+        angles = [current_robot_joints.get(dof).get_position()
+                  for dof in range(3)]
+        velocities = [current_robot_joints.get(dof).get_velocity()
                       for dof in range(3)]
-            velocities = [current_robot_joints.get(dof).get_velocity()
-                          for dof in range(3)]
-            robot_state = roboball2d.robot.DefaultRobotState(self._robot_config,
-                                                             angles,velocities)
-            time_stamp = real_robot_obs.get_time_stamp()
-            return (time_stamp,robot_state)
+        robot_state = roboball2d.robot.DefaultRobotState(self._robot_config,
+                                                         angles,velocities)
+        time_stamp = real_robot_obs.get_time_stamp()
+        return (time_stamp,robot_state)
 
-        def _get_context(self):
-            # wait for the next observation to be received,
-            # and read the state of the simulated balls
-            sim_world_state_obs = self._simulation.wait_for_next()
-            sim_world_state = sim_world_state_obs.get_extended_state()
-            time_stamp = sim_world_state_obs.get_time_stamp()
-            return (time_stamp,sim_world_state)
+    
+    def _get_context(self):
+        # wait for the next observation to be received,
+        # and read the state of the simulated balls
+        sim_world_state_obs = self._sim_world_state.wait_for_next()
+        sim_world_state = sim_world_state_obs.get_extended_state()
+        time_stamp = sim_world_state_obs.get_time_stamp()
+        return (time_stamp,sim_world_state)
 
-        real_robot = _get_robot_state()
-        simulation = _get_context()
+        
+    def observation_manager(self):
+
+        real_robot = self._get_robot_state()
+        simulation = self._get_context()
 
         return real_robot,simulation
         

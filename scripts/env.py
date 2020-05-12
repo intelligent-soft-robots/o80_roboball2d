@@ -43,20 +43,25 @@ def run():
         
         time_start = time.time()
 
+        torques = [0.0]*3
+        
         while time.time()-time_start < 3 :
 
             try:
+
+                # sending torques to real robot
+                # and mirroring commands to simulation
+                orchestrator.apply(torques=torques)
                 
                 # getting robot state from direct observation,
-                # and context world state, i.e. world state after
-                # an extra simulation step with merged information 
-                data = context_manager.observation_manager()
+                # and context world state
+                data = orchestrator.observation_manager()
                 (ts_robot,robot_state),(ts_context,context_world_state) = data
                 
                 # getting torques from policy and applying them
                 torques = policy.get_torques(robot_state.angles,
                                              robot_state.angular_velocities)
-                orchestrator.apply(torques=torques)
+
 
                 # printing racket contact information
                 _print_contacts(context_world_state)

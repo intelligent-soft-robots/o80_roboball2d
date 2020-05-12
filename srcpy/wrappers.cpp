@@ -144,8 +144,7 @@ PYBIND11_MODULE(o80_roboball2d, m)
     o80::Pybind11Config config_one_ball_world_state;
     config_one_ball_world_state.state = false; // VoidState (unused)
     config_one_ball_world_state.states = false; // VoidState (unused)
-    config_one_ball_world_state.extended_state = false; // FiveBallsWorldsState (done above)
-    //config_one_ball_world_state.observation = false;
+    config_one_ball_world_state.extended_state = false; // OneBallWorldsState (done above)
     config_one_ball_world_state.prefix = "OneBallWorldState";
     o80::create_core_python_bindings<QUEUE,
 				     1,

@@ -56,7 +56,6 @@ def run_simulation(render=True):
 
     
     running = True
-    previous_state = None
     while running:
 
         # waiting to get order from frontend to perform
@@ -76,12 +75,9 @@ def run_simulation(render=True):
         robot_state = _get_robot_state(mirroring_states,r2d.robot_config)
 
         # running the physics (mirring robot + virtual balls dynamics)
-        if previous_state:
-            world_state = r2d.world.step(None,
-                                         mirroring_robot_states=previous_state,
-                                         current_time=time.time()-time_start)
-        previous_state = robot_state
-        
+        world_state = r2d.world.step(None,
+                                     mirroring_robot_states=robot_state,
+                                     current_time=time.time()-time_start)
 
         # using o80 backend to send world state to o80 frontend
         # (world_state needs to be converted first to serializable
