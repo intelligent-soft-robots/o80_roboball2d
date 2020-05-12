@@ -19,27 +19,30 @@ def run_simulation(render=True):
     o80.clear_shared_memory(segment_id_robot)
     o80.clear_shared_memory(segment_id_ball_gun)
     o80.clear_shared_memory(segment_id_world_state)
-    
+
     # o80 backends
     ball_gun_backend = o80_roboball2d.BallGunBackEnd(segment_id_ball_gun)
     mirroring_robot_backend = o80_roboball2d.MirroringBackEnd(segment_id_robot)
-    world_state_backend = o80_roboball2d.FiveBallsWorldStateBackEnd(segment_id_world_state)
+    world_state_backend = o80_roboball2d.OneBallWorldStateBackEnd(segment_id_world_state)
 
     # creating the roboball2d instances
     r2d = roboball2d.factory.get_default(window_size=(400,200))
-    
-    time_start = time.time()
-    previous_ball_gun_id = -1
-    previous_action_id = -1
-    torques = [0,0,0]
-    robot_state = None
 
+    # init
+    time_start = time.time()
+    for _ in range(2):
+        world_state = r2d.world.step([0,0,0],
+                                     current_time=time.time()-time_start)
+        r2d.renderer.render(world_state,[],
+                            time_step=1.0/30.0,wait=False)
+        time.sleep(0.1)
+        
     # managing the burst commands sent by
     # the o80 frontend
     burster = o80.Burster(segment_id_robot)
 
     # converting o80 mirror command into roboball2d robot state
-    def _get_robot_state(mirroring_states):
+    def _get_robot_state(mirroring_states,robot_config):
         angles = [mirroring_states.get(index).get_position()
                   for index in range(3)]
         angular_velocities = [mirroring_states.get(index).get_velocity()
@@ -49,6 +52,8 @@ def run_simulation(render=True):
             generalized_coordinates=angles,
             generalized_velocities=angular_velocities)
         return robot_state
+
+
     
     running = True
     previous_state = None
@@ -62,19 +67,19 @@ def run_simulation(render=True):
         # and shooting if requested
         shooting = ball_gun_backend.pulse()
         if shooting.get(0).get():
-            world.reset(None,ball_guns)
+            r2d.world.reset(None,r2d.ball_guns)
 
         # using o80 mirroring backend to get
         # desired (mirroring) robot states
         # and converting them into roboball2d robot state
         mirroring_states = mirroring_robot_backend.pulse()
-        robot_state = _get_robot_state(mirroring_states)
+        robot_state = _get_robot_state(mirroring_states,r2d.robot_config)
 
         # running the physics (mirring robot + virtual balls dynamics)
         if previous_state:
-            world_state = world.step(None,
-                                     mirroring_robot_states=previous_state,
-                                     current_time=time.time()-time_start)
+            world_state = r2d.world.step(None,
+                                         mirroring_robot_states=previous_state,
+                                         current_time=time.time()-time_start)
         previous_state = robot_state
         
 
@@ -88,8 +93,8 @@ def run_simulation(render=True):
 
         # rendering
         if render:
-            renderer.render(world_state,[],
-                            time_step=1.0/30.0,wait=False)
+            r2d.renderer.render(world_state,[],
+                                time_step=1.0/30.0,wait=False)
 
         
         
