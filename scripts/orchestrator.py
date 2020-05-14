@@ -19,6 +19,11 @@ class Orchestrator:
         self._sim_robot = o80_roboball2d.MirroringFrontEnd("sim-robot")
         self._sim_world_state = o80_roboball2d.OneBallWorldStateFrontEnd("sim-world-state")
 
+        # logging all data exchange happening via o80
+        for frontend in (self._real_robot,self._sim_ball_gun,
+                         self._sim_robot, self._sim_world_state):
+            frontend.start_logging("o80logger")
+        
         self._robot_config = roboball2d.robot.default_robot_config.DefaultRobotConfig()
         
         # letting time to start properly

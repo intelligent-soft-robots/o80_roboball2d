@@ -25,6 +25,10 @@ def run_simulation(render=True):
     mirroring_robot_backend = o80_roboball2d.MirroringBackEnd(segment_id_robot)
     world_state_backend = o80_roboball2d.OneBallWorldStateBackEnd(segment_id_world_state)
 
+    # logging all data exchange happening via o80
+    for backend in (ball_gun_backend,mirroring_robot_backend,world_state_backend):
+        backend.start_logging("o80logger")
+    
     # creating the roboball2d instances
     r2d = roboball2d.factory.get_default(window_size=(400,200))
 
