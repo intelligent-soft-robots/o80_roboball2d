@@ -89,6 +89,7 @@ source /opt/ros/melodic/setup.bash
 LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:<absolute path to Software>/workspace/devel/lib
 source <absolute path to Software>/workspace/install/setup.bash
 ```
+Before continuing, source ~/.bashrc or open a new terminal.
 
 # Running the example
 
