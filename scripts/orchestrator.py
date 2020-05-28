@@ -20,9 +20,9 @@ class Orchestrator:
         self._sim_world_state = o80_roboball2d.OneBallWorldStateFrontEnd("sim-world-state")
 
         # logging all data exchange happening via o80
-        for frontend in (self._real_robot,self._sim_ball_gun,
-                         self._sim_robot, self._sim_world_state):
-            frontend.start_logging("o80logger")
+        #for frontend in (self._real_robot,self._sim_ball_gun,
+        #                 self._sim_robot, self._sim_world_state):
+        self._real_robot.start_logging("o80logger")
         
         self._robot_config = roboball2d.robot.default_robot_config.DefaultRobotConfig()
         
@@ -71,6 +71,8 @@ class Orchestrator:
         
     def apply(self,
               torques = None,
+              angles=[0.,0.,0.],
+              angular_velocities=[0.,0.,0.],
               reset = None,
               shoot = False):
 
