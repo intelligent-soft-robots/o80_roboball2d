@@ -16,9 +16,6 @@ reality_frequency = 2000
         
 def run_reality(render=True):
 
-    # starting a logger
-    logger = o80.Logger(5000,"o80logger",True)
-    
     # cleanup of previous runs
     o80.clear_shared_memory(segment_id_robot)
     
@@ -37,7 +34,6 @@ def run_reality(render=True):
     write_observation_on_new_commands = True
     robot_backend = o80_roboball2d.RealRobotBackEnd(segment_id_robot,
                                                     write_observation_on_new_commands)
-    robot_backend.start_logging("o80logger")
     
     # running the simulation
     time_start = time.time()

@@ -28,10 +28,6 @@ def run():
     # init
     orchestrator.apply(torques=[0,0,0])
 
-    # logging an iteration
-    logger = o80.Logger(5000,"o80logger",False)
-    logged = False
-    
     running = True
     while running:
 
@@ -83,11 +79,6 @@ def run():
 
             except KeyboardInterrupt:
                 running = False
-
-        if not logged:
-            logger.save("/tmp/roboball2d.o80")
-            logged=True
-        
 
 if __name__ == "__main__":
 

@@ -8,7 +8,7 @@ import o80_roboball2d
 
 class Orchestrator:
 
-    def __init__(self,reset_real_robot_angles=[0,0,0]):
+    def __init__(self,reset_real_robot_angles=[0,0,0],plot=True):
 
         self._reset_real_robot_angles = reset_real_robot_angles
         self._reset_controller = PDController()

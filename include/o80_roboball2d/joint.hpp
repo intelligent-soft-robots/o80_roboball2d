@@ -32,10 +32,6 @@ public:
 
     bool finished(const o80::TimePoint &start,
                   const o80::TimePoint &now,
-                  const long int duration_us) const;
-
-    bool finished(const o80::TimePoint &start,
-                  const o80::TimePoint &now,
                   const Joint &start_state,
                   const Joint &current_state,
                   const Joint &previous_desired_state,
